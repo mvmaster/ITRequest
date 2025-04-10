@@ -25,7 +25,7 @@ if ($is_logged_in) {
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-gradient" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
     <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="<?php echo $base_url; ?>">
+        <a class="navbar-brand d-flex align-items-center" href="<?php echo BASE_URL; ?>">
             <i class="fas fa-headset me-2"></i>
             <span>ระบบจัดการ IT Request</span>
         </a>
@@ -39,39 +39,46 @@ if ($is_logged_in) {
                 <?php if ($is_logged_in) : ?>
                     <?php if ($user_role === 'user') : ?>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/user/index.php">
+                            <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/user/index.php') !== false ? 'active' : ''; ?>" 
+                               href="<?php echo BASE_URL; ?>/user/index.php">
                                 <i class="fas fa-home"></i> หน้าหลัก
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'create-request.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/user/create-request.php">
+                            <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/user/create-request.php') !== false ? 'active' : ''; ?>" 
+                               href="<?php echo BASE_URL; ?>/user/create-request.php">
                                 <i class="fas fa-plus-circle"></i> สร้าง IT Request
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'track-request.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/user/track-request.php">
+                            <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/user/track-request.php') !== false ? 'active' : ''; ?>" 
+                               href="<?php echo BASE_URL; ?>/user/track-request.php">
                                 <i class="fas fa-search"></i> ตรวจสอบสถานะ
                             </a>
                         </li>
                     <?php elseif ($user_role === 'it_staff' || $user_role === 'admin') : ?>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/admin/index.php">
+                            <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/admin/index.php') !== false ? 'active' : ''; ?>" 
+                               href="<?php echo BASE_URL; ?>/admin/index.php">
                                 <i class="fas fa-tachometer-alt"></i> แดชบอร์ด
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage-requests.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/admin/manage-requests.php">
+                            <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/admin/manage-requests.php') !== false ? 'active' : ''; ?>" 
+                               href="<?php echo BASE_URL; ?>/admin/manage-requests.php">
                                 <i class="fas fa-tasks"></i> จัดการคำขอ
                             </a>
                         </li>
                         <?php if ($user_role === 'admin') : ?>
                             <li class="nav-item">
-                                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/admin/users.php">
+                                <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/admin/users.php') !== false ? 'active' : ''; ?>" 
+                                   href="<?php echo BASE_URL; ?>/admin/users.php">
                                     <i class="fas fa-users"></i> จัดการผู้ใช้
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/admin/reports.php">
+                                <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/admin/reports.php') !== false ? 'active' : ''; ?>" 
+                                   href="<?php echo BASE_URL; ?>/admin/reports.php">
                                     <i class="fas fa-chart-bar"></i> รายงาน
                                 </a>
                             </li>
@@ -79,7 +86,8 @@ if ($is_logged_in) {
                     <?php endif; ?>
                 <?php else : ?>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="<?php echo $base_url; ?>/index.php">
+                        <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/index.php') !== false && strpos($_SERVER['PHP_SELF'], '/user/index.php') === false && strpos($_SERVER['PHP_SELF'], '/admin/index.php') === false ? 'active' : ''; ?>" 
+                           href="<?php echo BASE_URL; ?>/index.php">
                             <i class="fas fa-home"></i> หน้าหลัก
                         </a>
                     </li>
@@ -123,7 +131,7 @@ if ($is_logged_in) {
                                         $isUnread = $notif['is_read'] == 0;
                                         $timeAgo = time_elapsed_string($notif['created_at']);
                                         
-                                        echo '<a href="' . $base_url . '/user/view-request.php?id=' . $notif['request_id'] . '" class="dropdown-item notification-item ' . ($isUnread ? 'bg-light' : '') . '">';
+                                        echo '<a href="' . BASE_URL . '/user/view-request.php?id=' . $notif['request_id'] . '" class="dropdown-item notification-item ' . ($isUnread ? 'bg-light' : '') . '">';
                                         echo '<div class="d-flex align-items-center">';
                                         echo '<div class="flex-shrink-0">';
                                         echo '<i class="fas fa-bell ' . ($isUnread ? 'text-primary' : 'text-muted') . '"></i>';
@@ -147,7 +155,7 @@ if ($is_logged_in) {
                             ?>
                             
                             <div class="notifications-footer">
-                                <a href="<?php echo $base_url; ?>/user/notifications.php" class="text-decoration-none">ดูการแจ้งเตือนทั้งหมด</a>
+                                <a href="<?php echo BASE_URL; ?>/user/notifications.php" class="text-decoration-none">ดูการแจ้งเตือนทั้งหมด</a>
                             </div>
                         </div>
                     </li>
@@ -172,26 +180,26 @@ if ($is_logged_in) {
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="<?php echo $base_url; ?>/user/profile.php">
+                                <a class="dropdown-item" href="<?php echo BASE_URL; ?>/user/profile.php">
                                     <i class="fas fa-user-circle me-2"></i> โปรไฟล์
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="<?php echo $base_url; ?>/user/settings.php">
-                                    <i class="fas fa-cogs me-2"></i> ตั้งค่า
+                                <a class="dropdown-item" href="<?php echo BASE_URL; ?>/user/change-password.php">
+                                    <i class="fas fa-key me-2"></i> เปลี่ยนรหัสผ่าน
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item logout-btn" href="<?php echo $base_url; ?>/auth/logout.php">
-                                    <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                                <a class="dropdown-item logout-btn" href="<?php echo BASE_URL; ?>/auth/logout.php">
+                                    <i class="fas fa-sign-out-alt me-2"></i> ออกจากระบบ
                                 </a>
                             </li>
                         </ul>
                     </li>
                 <?php else : ?>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-light text-primary ms-2 px-3" href="<?php echo $base_url; ?>/auth/login.php">
+                        <a class="nav-link btn btn-light text-primary ms-2 px-3" href="<?php echo BASE_URL; ?>/auth/login.php">
                             <i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ
                         </a>
                     </li>
