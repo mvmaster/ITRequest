@@ -9,9 +9,9 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap Bundle with Popper -->
-    <script src="<?php echo $base_url; ?>/assets/js/bootstrap.min.js"></script>
+    <script src="<?php echo BASE_URL; ?>/assets/js/bootstrap.min.js"></script>
     <!-- Custom JS -->
-    <script src="<?php echo $base_url; ?>/assets/js/main.js"></script>
+    <script src="<?php echo BASE_URL; ?>/assets/js/main.js"></script>
     
     <!-- Initialize Bootstrap tooltips and popovers -->
     <script>

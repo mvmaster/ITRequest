@@ -1,6 +1,7 @@
 <?php
 // Include necessary files
 require_once '../config/database.php';
+require_once '../config/app.php';
 require_once '../auth/session.php';
 require_once '../includes/functions.php';
 
@@ -120,8 +121,6 @@ foreach ($monthlyStats as $month => $data) {
 
 closeDB($conn);
 
-// Set base URL for includes
-$base_url = "http://192.168.0.4/request";
 ?>
 
 <?php include '../includes/header.php'; ?>

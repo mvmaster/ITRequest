@@ -1,6 +1,7 @@
 <?php
 // Include necessary files
 require_once 'config/database.php';
+require_once 'config/app.php';
 require_once 'auth/session.php';
 
 // Check if user is logged in
@@ -18,8 +19,6 @@ if ($loggedIn) {
     }
 }
 
-// Set base URL for includes
-$base_url = "http://192.168.0.4/request"; // แก้ไขให้ตรงกับ URL ของเว็บไซต์คุณ
 ?>
 
 <!DOCTYPE html>
@@ -29,11 +28,11 @@ $base_url = "http://192.168.0.4/request"; // แก้ไขให้ตรง�
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบจัดการ IT Request</title>
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="<?php echo $base_url; ?>/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/bootstrap.min.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $base_url; ?>/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
     <style>
         /* Custom styles for landing page */
         .hero-section {

@@ -1,6 +1,7 @@
 <?php
 // Include necessary files
 require_once '../config/database.php';
+require_once '../config/app.php';
 require_once '../auth/session.php';
 require_once '../includes/functions.php';
 
@@ -74,8 +75,6 @@ if ($countsResult->num_rows > 0) {
 
 closeDB($conn);
 
-// Set base URL for includes
-$base_url = "http://localhost/it-request-system"; // แก้ไขให้ตรงกับ URL ของเว็บไซต์คุณ
 ?>
 
 <?php include '../includes/header.php'; ?>
