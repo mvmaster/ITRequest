@@ -128,34 +128,22 @@ if ($loggedIn) {
                     <div class="card-header">
                         <h4 class="mb-0"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</h4>
                     </div>
-                    <div class="card-body p-4">
-                        <form action="auth/login_process.php" method="post">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">ชื่อผู้ใช้</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                    <input type="text" class="form-control" id="username" name="username" required autofocus>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label for="password" class="form-label">รหัสผ่าน</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-                            </div>
-                            <div class="d-grid gap-2 mb-3">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <small class="text-muted">
-                                    หากไม่สามารถเข้าสู่ระบบได้ กรุณาติดต่อฝ่าย IT<br>
-                                    โทร: 1234 | อีเมล: it@example.com
-                                </small>
-                            </div>
-                        </form>
+                    <div class="card-body p-4 text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-user-circle fa-5x text-primary"></i>
+                        </div>
+                        <h5 class="mb-4">กรุณาเข้าสู่ระบบเพื่อใช้งาน</h5>
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="auth/login.php" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt"></i> ไปยังหน้าเข้าสู่ระบบ
+                            </a>
+                        </div>
+                        <div class="text-center">
+                            <small class="text-muted">
+                                หากไม่สามารถเข้าสู่ระบบได้ กรุณาติดต่อฝ่าย IT<br>
+                                โทร: 1234 | อีเมล: it@example.com
+                            </small>
+                        </div>
                     </div>
                 </div>
                 
@@ -191,6 +179,6 @@ if ($loggedIn) {
     <!-- Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <!-- Bootstrap JS -->
-    <script src="<?php echo $base_url; ?>/assets/js/bootstrap.min.js"></script>
+    <script src="<?php echo BASE_URL; ?>/assets/js/bootstrap.min.js"></script>
 </body>
 </html>
