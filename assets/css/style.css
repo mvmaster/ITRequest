@@ -227,6 +227,25 @@ body {
     font-size: 1.2rem;
 }
 
+/* แก้ไขปัญหา Modal */
+.modal {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal-content {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: none;
+}
+
+.modal.show {
+    display: block;
+    padding-right: 17px;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 767.98px) {
     .timeline > li {

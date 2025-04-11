@@ -71,12 +71,6 @@ if ($is_logged_in) {
                         </li>
                         <?php if ($user_role === 'admin') : ?>
                             <li class="nav-item">
-                                <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/admin/users.php') !== false ? 'active' : ''; ?>" 
-                                   href="<?php echo BASE_URL; ?>/admin/users.php">
-                                    <i class="fas fa-users"></i> จัดการผู้ใช้
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], '/admin/reports.php') !== false ? 'active' : ''; ?>" 
                                    href="<?php echo BASE_URL; ?>/admin/reports.php">
                                     <i class="fas fa-chart-bar"></i> รายงาน

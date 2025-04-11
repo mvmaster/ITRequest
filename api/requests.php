@@ -461,6 +461,12 @@ function createRequest() {
         // Handle file uploads
         $attachments = [];
         if (isset($_FILES['attachments'])) {
+            // Create upload directory if it doesn't exist
+            $uploadDir = '../uploads/';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            
             $files = $_FILES['attachments'];
             
             // If single file
@@ -473,24 +479,26 @@ function createRequest() {
                     'size' => $files['size']
                 ];
                 
-                $uploadResult = uploadFile($fileUpload, '../uploads/');
-                
-                if ($uploadResult['status']) {
-                    // Save attachment info to database
-                    $fileName = sanitizeInput($uploadResult['file_name'], $conn);
-                    $filePath = sanitizeInput($uploadResult['file_path'], $conn);
-                    $fileType = sanitizeInput($uploadResult['file_type'], $conn);
-                    $fileSize = (int)$uploadResult['file_size'];
+                if ($fileUpload['error'] === 0) {
+                    $uploadResult = uploadFile($fileUpload, $uploadDir);
                     
-                    $attachSql = "INSERT INTO attachments (request_id, file_name, file_path, file_type, file_size) 
-                                  VALUES ($requestId, '$fileName', '$filePath', '$fileType', $fileSize)";
-                    
-                    if ($conn->query($attachSql)) {
-                        $attachments[] = [
-                            'attachment_id' => $conn->insert_id,
-                            'file_name' => $fileName,
-                            'file_path' => $filePath
-                        ];
+                    if ($uploadResult['status']) {
+                        // Save attachment info to database
+                        $fileName = sanitizeInput($uploadResult['file_name'], $conn);
+                        $filePath = sanitizeInput($uploadResult['file_path'], $conn);
+                        $fileType = sanitizeInput($uploadResult['file_type'], $conn);
+                        $fileSize = (int)$uploadResult['file_size'];
+                        
+                        $attachSql = "INSERT INTO attachments (request_id, file_name, file_path, file_type, file_size) 
+                                    VALUES ($requestId, '$fileName', '$filePath', '$fileType', $fileSize)";
+                        
+                        if ($conn->query($attachSql)) {
+                            $attachments[] = [
+                                'attachment_id' => $conn->insert_id,
+                                'file_name' => $fileName,
+                                'file_path' => $filePath
+                            ];
+                        }
                     }
                 }
             } 
@@ -499,7 +507,7 @@ function createRequest() {
                 $fileCount = count($files['name']);
                 
                 for ($i = 0; $i < $fileCount; $i++) {
-                    if ($files['error'][$i] === 0) {
+                    if ($files['error'][$i] === 0) { // No error
                         $fileUpload = [
                             'name' => $files['name'][$i],
                             'type' => $files['type'][$i],
@@ -508,7 +516,7 @@ function createRequest() {
                             'size' => $files['size'][$i]
                         ];
                         
-                        $uploadResult = uploadFile($fileUpload, '../uploads/');
+                        $uploadResult = uploadFile($fileUpload, $uploadDir);
                         
                         if ($uploadResult['status']) {
                             // Save attachment info to database
@@ -518,7 +526,7 @@ function createRequest() {
                             $fileSize = (int)$uploadResult['file_size'];
                             
                             $attachSql = "INSERT INTO attachments (request_id, file_name, file_path, file_type, file_size) 
-                                          VALUES ($requestId, '$fileName', '$filePath', '$fileType', $fileSize)";
+                                        VALUES ($requestId, '$fileName', '$filePath', '$fileType', $fileSize)";
                             
                             if ($conn->query($attachSql)) {
                                 $attachments[] = [
@@ -564,7 +572,7 @@ function updateRequestStatus() {
     }
     
     // Validate required fields
-    if (empty($data['request_id']) || empty($data['status']) || empty($data['comment'])) {
+    if (empty($data['request_id']) || empty($data['comment'])) {
         sendJsonResponse(
             apiResponse('error', 'Missing required fields'),
             400 // Bad Request
@@ -576,39 +584,57 @@ function updateRequestStatus() {
     
     // Sanitize input
     $requestId = (int)$data['request_id'];
-    $status = sanitizeInput($data['status'], $conn);
+    $status = isset($data['status']) ? sanitizeInput($data['status'], $conn) : '';
     $comment = sanitizeInput($data['comment'], $conn);
     $userId = getCurrentUserId();
     
     // Check if request exists
-    $checkSql = "SELECT r.*, u.user_id as requester_id FROM requests r 
-                 LEFT JOIN users u ON r.user_id = u.user_id
-                 WHERE r.request_id = $requestId";
+    $checkSql = "SELECT r.*, u.user_id as requester_id, r.status as current_status 
+                FROM requests r 
+                LEFT JOIN users u ON r.user_id = u.user_id
+                WHERE r.request_id = $requestId";
     $checkResult = $conn->query($checkSql);
     
     if ($checkResult->num_rows > 0) {
         $request = $checkResult->fetch_assoc();
+        $currentStatus = $request['current_status'];
+        
+        // If status is not provided, use current status (for comments only)
+        if (empty($status)) {
+            $status = $currentStatus;
+        }
         
         // Update request status
-        $completedAt = ($status === 'completed') ? "completed_at = CURRENT_TIMESTAMP," : "";
-        $sql = "UPDATE requests SET status = '$status', $completedAt updated_at = CURRENT_TIMESTAMP WHERE request_id = $requestId";
+        $completedAt = ($status === 'completed' && $currentStatus !== 'completed') ? 
+            "completed_at = CURRENT_TIMESTAMP," : "";
+        
+        $sql = "UPDATE requests SET status = '$status', $completedAt updated_at = CURRENT_TIMESTAMP 
+                WHERE request_id = $requestId";
         
         if ($conn->query($sql)) {
             // Add log entry
             addRequestLog($requestId, $status, $comment, $userId);
             
-            // Create notification for requester
-            $statusThai = getStatusThai($status);
-            $notificationMsg = "คำขอ #{$request['reference_no']} ได้เปลี่ยนสถานะเป็น \"{$statusThai}\"";
-            createNotification($request['requester_id'], $requestId, $notificationMsg);
+            // Create notification for requester if status has changed
+            if ($status !== $currentStatus) {
+                $statusThai = getStatusThai($status);
+                $notificationMsg = "คำขอ #{$request['reference_no']} ได้เปลี่ยนสถานะเป็น \"{$statusThai}\"";
+                createNotification($request['requester_id'], $requestId, $notificationMsg);
+            }
             
             closeDB($conn);
+            
+            // Redirect back to request details page after successful update
+            if (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'request-details.php') !== false) {
+                header("Location: " . $_SERVER['HTTP_REFERER']);
+                exit;
+            }
             
             sendJsonResponse(
                 apiResponse('success', 'Request status updated successfully', [
                     'request_id' => $requestId,
                     'status' => $status,
-                    'status_thai' => $statusThai
+                    'status_thai' => getStatusThai($status)
                 ])
             );
         } else {
@@ -640,7 +666,7 @@ function assignRequest() {
     }
     
     // Validate required fields
-    if (empty($data['request_id']) || empty($data['assigned_to'])) {
+    if (empty($data['request_id']) || empty($data['assigned_to']) || empty($data['comment'])) {
         sendJsonResponse(
             apiResponse('error', 'Missing required fields'),
             400 // Bad Request
@@ -653,7 +679,7 @@ function assignRequest() {
     // Sanitize input
     $requestId = (int)$data['request_id'];
     $assignedTo = (int)$data['assigned_to'];
-    $comment = isset($data['comment']) ? sanitizeInput($data['comment'], $conn) : 'มอบหมายงานให้เจ้าหน้าที่ IT';
+    $comment = sanitizeInput($data['comment'], $conn);
     $userId = getCurrentUserId();
     
     // Check if request exists
@@ -675,12 +701,13 @@ function assignRequest() {
             $assigneeName = $assignee['first_name'] . ' ' . $assignee['last_name'];
         }
         
-        // Update request assigned_to
-        $sql = "UPDATE requests SET assigned_to = $assignedTo, status = 'in_progress', updated_at = CURRENT_TIMESTAMP WHERE request_id = $requestId";
+        // Update request assigned_to and set to in_progress
+        $sql = "UPDATE requests SET assigned_to = $assignedTo, status = 'in_progress', updated_at = CURRENT_TIMESTAMP 
+                WHERE request_id = $requestId";
         
         if ($conn->query($sql)) {
             // Add log entry
-            $logComment = $comment . " ($assigneeName)";
+            $logComment = $comment . " (มอบหมายให้: $assigneeName)";
             addRequestLog($requestId, 'in_progress', $logComment, $userId);
             
             // Create notification for requester
@@ -688,6 +715,12 @@ function assignRequest() {
             createNotification($request['requester_id'], $requestId, $notificationMsg);
             
             closeDB($conn);
+            
+            // Redirect back to request details page after successful assignment
+            if (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'request-details.php') !== false) {
+                header("Location: " . $_SERVER['HTTP_REFERER']);
+                exit;
+            }
             
             sendJsonResponse(
                 apiResponse('success', 'Request assigned successfully', [
@@ -850,6 +883,12 @@ function deleteRequest($requestId) {
         
         if ($conn->query($sql)) {
             closeDB($conn);
+            
+            // Redirect back to admin page after successful deletion
+            if (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'admin') !== false) {
+                header("Location: " . $_SERVER['HTTP_REFERER']);
+                exit;
+            }
             
             sendJsonResponse(
                 apiResponse('success', 'Request deleted successfully', [

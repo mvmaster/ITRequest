@@ -119,6 +119,11 @@ foreach ($monthlyStats as $month => $data) {
     ];
 }
 
+// Calculate progress percentage for each staff
+foreach ($staffList as &$staff) {
+    $staff['progress_percent'] = $counts['total'] > 0 ? round(($staff['active_requests'] / $counts['total']) * 100) : 0;
+}
+
 closeDB($conn);
 
 ?>
@@ -127,131 +132,191 @@ closeDB($conn);
 <?php include '../includes/navbar.php'; ?>
 
 <div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <h2 class="page-header">
-                <i class="fas fa-tachometer-alt"></i> แดชบอร์ดผู้ดูแลระบบ
-                <small class="text-muted">ยินดีต้อนรับ, <?php echo getCurrentUserName(); ?></small>
-            </h2>
-        </div>
-    </div>
-    
-    <!-- Stats Row -->
+    <!-- Welcome Section with Greeting and Summary -->
     <div class="row mb-4">
-        <div class="col-md-2">
-            <div class="card">
-                <div class="card-body stats-card">
-                    <div class="stats-icon text-primary">
-                        <i class="fas fa-clipboard-list"></i>
+        <div class="col-md-12">
+            <div class="card bg-gradient-primary text-white shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">
+                                <i class="fas fa-tachometer-alt"></i> สวัสดี, <?php echo getCurrentUserName(); ?>
+                            </h2>
+                            <p class="mb-0">ยินดีต้อนรับสู่แดชบอร์ดผู้ดูแลระบบ IT Request</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <p class="mb-0"><i class="far fa-calendar-alt"></i> <?php echo formatDateThai(date('Y-m-d H:i:s')); ?></p>
+                            <h5>ปีงบประมาณ <?php echo $currentYear + 543; ?></h5>
+                        </div>
                     </div>
-                    <div class="stats-number"><?php echo $counts['total']; ?></div>
-                    <div class="stats-label">คำขอทั้งหมด</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card">
-                <div class="card-body stats-card">
-                    <div class="stats-icon text-warning">
-                        <i class="fas fa-clock"></i>
+    </div>
+    
+    <!-- Stats Cards Row - Responsive Layout with Improved Design -->
+    <div class="row mb-4">
+        <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="card border-left-primary shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3 text-center text-primary">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                        <div class="col-9">
+                            <div class="text-xs text-uppercase font-weight-bold text-muted">คำขอทั้งหมด</div>
+                            <div class="h3 mb-0 font-weight-bold"><?php echo $counts['total']; ?></div>
+                        </div>
                     </div>
-                    <div class="stats-number"><?php echo $counts['pending']; ?></div>
-                    <div class="stats-label">รอดำเนินการ</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card">
-                <div class="card-body stats-card">
-                    <div class="stats-icon text-info">
-                        <i class="fas fa-spinner"></i>
+        <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="card border-left-warning shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3 text-center text-warning">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                        <div class="col-9">
+                            <div class="text-xs text-uppercase font-weight-bold text-muted">รอดำเนินการ</div>
+                            <div class="h3 mb-0 font-weight-bold"><?php echo $counts['pending']; ?></div>
+                        </div>
                     </div>
-                    <div class="stats-number"><?php echo $counts['in_progress']; ?></div>
-                    <div class="stats-label">กำลังดำเนินการ</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card">
-                <div class="card-body stats-card">
-                    <div class="stats-icon text-success">
-                        <i class="fas fa-check-circle"></i>
+        <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="card border-left-info shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3 text-center text-info">
+                            <i class="fas fa-spinner fa-2x"></i>
+                        </div>
+                        <div class="col-9">
+                            <div class="text-xs text-uppercase font-weight-bold text-muted">กำลังดำเนินการ</div>
+                            <div class="h3 mb-0 font-weight-bold"><?php echo $counts['in_progress']; ?></div>
+                        </div>
                     </div>
-                    <div class="stats-number"><?php echo $counts['completed']; ?></div>
-                    <div class="stats-label">เสร็จสิ้น</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card">
-                <div class="card-body stats-card">
-                    <div class="stats-icon text-danger">
-                        <i class="fas fa-times-circle"></i>
+        <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="card border-left-success shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3 text-center text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                        <div class="col-9">
+                            <div class="text-xs text-uppercase font-weight-bold text-muted">เสร็จสิ้น</div>
+                            <div class="h3 mb-0 font-weight-bold"><?php echo $counts['completed']; ?></div>
+                        </div>
                     </div>
-                    <div class="stats-number"><?php echo $counts['rejected']; ?></div>
-                    <div class="stats-label">ปฏิเสธ</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card">
-                <div class="card-body stats-card">
-                    <div class="stats-icon text-secondary">
-                        <i class="fas fa-archive"></i>
+        <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="card border-left-danger shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3 text-center text-danger">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                        <div class="col-9">
+                            <div class="text-xs text-uppercase font-weight-bold text-muted">ปฏิเสธ</div>
+                            <div class="h3 mb-0 font-weight-bold"><?php echo $counts['rejected']; ?></div>
+                        </div>
                     </div>
-                    <div class="stats-number"><?php echo $counts['closed']; ?></div>
-                    <div class="stats-label">ปิดงาน</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="card border-left-secondary shadow-sm h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3 text-center text-secondary">
+                            <i class="fas fa-archive fa-2x"></i>
+                        </div>
+                        <div class="col-9">
+                            <div class="text-xs text-uppercase font-weight-bold text-muted">ปิดงาน</div>
+                            <div class="h3 mb-0 font-weight-bold"><?php echo $counts['closed']; ?></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
     <div class="row">
-        <!-- Chart -->
+        <!-- Main Content: Charts and Recent Requests -->
         <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> สถิติคำขอรายเดือน ปี <?php echo $currentYear + 543; ?></h5>
+            <!-- Monthly Statistics Chart - More Compact Design -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar"></i> สถิติคำขอรายเดือน ปี <?php echo $currentYear + 543; ?>
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="chartOptions" data-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="chartOptions">
+                            <a class="dropdown-item" href="#" id="downloadChart">
+                                <i class="fas fa-download"></i> ดาวน์โหลดกราฟ
+                            </a>
+                            <a class="dropdown-item" href="reports.php">
+                                <i class="fas fa-chart-line"></i> ดูรายงานเพิ่มเติม
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <canvas id="requestsChart" height="300"></canvas>
+                    <div class="chart-container" style="position: relative; height:260px;">
+                        <canvas id="requestsChart"></canvas>
+                    </div>
                 </div>
             </div>
             
-            <!-- Recent Requests -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-history"></i> คำขอล่าสุด</h5>
-                    <a href="manage-requests.php" class="btn btn-sm btn-outline-primary">ดูทั้งหมด</a>
+            <!-- Recent Requests - Modern Table Design -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 font-weight-bold text-primary">
+                        <i class="fas fa-history"></i> คำขอล่าสุด
+                    </h5>
+                    <a href="manage-requests.php" class="btn btn-sm btn-primary">
+                        <i class="fas fa-search"></i> ดูทั้งหมด
+                    </a>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <?php if (count($recentRequests) > 0) : ?>
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
+                            <table class="table table-hover mb-0">
+                                <thead class="thead-light">
                                     <tr>
-                                        <th>หมายเลขอ้างอิง</th>
+                                        <th class="pl-3">หมายเลขอ้างอิง</th>
                                         <th>หัวข้อ</th>
                                         <th>ผู้แจ้ง</th>
                                         <th>ประเภท</th>
-                                        <th>ความสำคัญ</th>
-                                        <th>วันที่สร้าง</th>
-                                        <th>สถานะ</th>
-                                        <th></th>
+                                        <th class="text-center">สถานะ</th>
+                                        <th class="text-right pr-3">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($recentRequests as $request) : ?>
                                         <tr>
-                                            <td><?php echo $request['reference_no']; ?></td>
-                                            <td><?php echo htmlspecialchars($request['subject']); ?></td>
-                                            <td><?php echo htmlspecialchars($request['requester_name']); ?></td>
-                                            <td><?php echo htmlspecialchars($request['type_name']); ?></td>
-                                            <td><?php echo $request['priority_badge']; ?></td>
-                                            <td><?php echo $request['created_at_formatted']; ?></td>
-                                            <td><?php echo $request['status_badge']; ?></td>
+                                            <td class="pl-3">
+                                                <span class="font-weight-bold"><?php echo $request['reference_no']; ?></span>
+                                                <small class="d-block text-muted"><?php echo $request['created_at_formatted']; ?></small>
+                                            </td>
                                             <td>
-                                                <a href="request-details.php?id=<?php echo $request['request_id']; ?>" class="btn btn-sm btn-info">
+                                                <?php echo htmlspecialchars(mb_strimwidth($request['subject'], 0, 30, "...")); ?>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($request['requester_name']); ?></td>
+                                            <td><span class="badge badge-info"><?php echo htmlspecialchars($request['type_name']); ?></span></td>
+                                            <td class="text-center"><?php echo $request['status_badge']; ?></td>
+                                            <td class="text-right pr-3">
+                                                <a href="request-details.php?id=<?php echo $request['request_id']; ?>" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye"></i> ดูรายละเอียด
                                                 </a>
                                             </td>
@@ -261,7 +326,7 @@ closeDB($conn);
                             </table>
                         </div>
                     <?php else : ?>
-                        <div class="alert alert-info">
+                        <div class="alert alert-info m-3">
                             <i class="fas fa-info-circle"></i> ไม่มีคำขอในระบบ
                         </div>
                     <?php endif; ?>
@@ -269,64 +334,110 @@ closeDB($conn);
             </div>
         </div>
         
+        <!-- Sidebar: IT Staff, Request Types, Quick Links -->
         <div class="col-lg-4">
-            <!-- Request Types -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-tags"></i> สถิติตามประเภทคำขอ</h5>
+            <!-- Request Types Distribution - More Visualized Design -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 font-weight-bold text-primary">
+                        <i class="fas fa-tags"></i> สถิติตามประเภทคำขอ
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="typeChart" height="250"></canvas>
+                    <div class="chart-container" style="position: relative; height:220px;">
+                        <canvas id="typeChart"></canvas>
+                    </div>
                 </div>
             </div>
             
-            <!-- IT Staff -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-users"></i> ทีม IT Support</h5>
+            <!-- IT Support Team - Card Based Design -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 font-weight-bold text-primary">
+                        <i class="fas fa-users"></i> ทีม IT Support
+                    </h5>
                 </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
+                <div class="card-body">
+                    <div class="row">
                         <?php foreach ($staffList as $staff) : ?>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-user-circle text-primary me-2"></i>
-                                    <?php echo htmlspecialchars($staff['first_name'] . ' ' . $staff['last_name']); ?>
-                                    <?php if ($staff['user_role'] === 'admin') : ?>
-                                        <span class="badge bg-danger">Admin</span>
-                                    <?php else : ?>
-                                        <span class="badge bg-info">Staff</span>
-                                    <?php endif; ?>
+                            <div class="col-xl-6 col-lg-12 col-md-6 mb-3">
+                                <div class="card border-left-<?php echo $staff['user_role'] === 'admin' ? 'danger' : 'info'; ?> shadow-sm h-100">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="mr-2">
+                                                <div class="avatar bg-<?php echo $staff['user_role'] === 'admin' ? 'danger' : 'info'; ?> text-white rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                    <?php echo strtoupper(substr($staff['first_name'], 0, 1)); ?>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold"><?php echo htmlspecialchars($staff['first_name'] . ' ' . $staff['last_name']); ?></div>
+                                                <div class="small text-muted">
+                                                    <?php if ($staff['user_role'] === 'admin') : ?>
+                                                        <span class="badge badge-danger">ผู้ดูแลระบบ</span>
+                                                    <?php else : ?>
+                                                        <span class="badge badge-info">เจ้าหน้าที่ IT</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="small">งานที่รับผิดชอบ</span>
+                                                <span class="small font-weight-bold"><?php echo $staff['active_requests']; ?> งาน</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-<?php echo $staff['user_role'] === 'admin' ? 'danger' : 'info'; ?>" role="progressbar" 
+                                                    style="width: <?php echo min($staff['progress_percent'], 100); ?>%" 
+                                                    aria-valuenow="<?php echo $staff['active_requests']; ?>" 
+                                                    aria-valuemin="0" 
+                                                    aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span class="badge bg-primary rounded-pill">
-                                    <i class="fas fa-tasks"></i> <?php echo $staff['active_requests']; ?>
-                                </span>
-                            </li>
+                            </div>
                         <?php endforeach; ?>
-                    </ul>
+                    </div>
                 </div>
             </div>
             
-            <!-- Quick Links -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-link"></i> ทางลัด</h5>
+            <!-- Quick Links - Action-Based Card Design -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 font-weight-bold text-primary">
+                        <i class="fas fa-link"></i> ทางลัด
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="manage-requests.php?status=pending" class="btn btn-warning">
-                            <i class="fas fa-clock"></i> จัดการคำขอที่รอดำเนินการ
-                        </a>
-                        <a href="manage-requests.php?status=in_progress" class="btn btn-info">
-                            <i class="fas fa-spinner"></i> ติดตามคำขอที่กำลังดำเนินการ
-                        </a>
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <a href="manage-requests.php?status=pending" class="btn btn-warning btn-block d-flex align-items-center justify-content-center py-3">
+                                <i class="fas fa-clock fa-2x mr-2"></i>
+                                <div class="text-left">
+                                    <small class="d-block">รอดำเนินการ</small>
+                                    <span class="font-weight-bold"><?php echo $counts['pending']; ?> คำขอ</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <a href="manage-requests.php?status=in_progress" class="btn btn-info btn-block d-flex align-items-center justify-content-center py-3">
+                                <i class="fas fa-spinner fa-2x mr-2"></i>
+                                <div class="text-left">
+                                    <small class="d-block">กำลังดำเนินการ</small>
+                                    <span class="font-weight-bold"><?php echo $counts['in_progress']; ?> คำขอ</span>
+                                </div>
+                            </a>
+                        </div>
                         <?php if (isAdmin()) : ?>
-                            <a href="reports.php" class="btn btn-success">
-                                <i class="fas fa-chart-line"></i> ดูรายงานสรุป
-                            </a>
-                            <a href="users.php" class="btn btn-secondary">
-                                <i class="fas fa-user-cog"></i> จัดการผู้ใช้งาน
-                            </a>
+                            <div class="col-6 mb-2">
+                                <a href="reports.php" class="btn btn-success btn-block d-flex align-items-center justify-content-center py-3">
+                                    <i class="fas fa-chart-line fa-2x mr-2"></i>
+                                    <div class="text-left">
+                                        <small class="d-block">รายงาน</small>
+                                        <span class="font-weight-bold">ดูรายงานสรุป</span>
+                                    </div>
+                                </a>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -335,99 +446,160 @@ closeDB($conn);
     </div>
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js - Latest version for better visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Chart Data
-        const monthlyData = <?php echo json_encode($chartData); ?>;
-        const typeData = <?php echo json_encode($typeStats); ?>;
+        // Chart Configuration with Better Colors and Responsive Design
+        Chart.defaults.font.family = "'Sarabun', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif";
+        Chart.defaults.color = '#666';
         
-        // Monthly Chart
+        // Monthly Chart - More Modern Design
         const monthlyCtx = document.getElementById('requestsChart').getContext('2d');
         const monthlyChart = new Chart(monthlyCtx, {
             type: 'bar',
             data: {
-                labels: monthlyData.map(item => item.month),
+                labels: <?php echo json_encode(array_column($chartData, 'month')); ?>,
                 datasets: [
                     {
                         label: 'คำขอทั้งหมด',
-                        data: monthlyData.map(item => item.total),
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
+                        data: <?php echo json_encode(array_column($chartData, 'total')); ?>,
+                        backgroundColor: 'rgba(78, 115, 223, 0.6)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
                         borderWidth: 1
                     },
                     {
                         label: 'เสร็จสิ้น',
-                        data: monthlyData.map(item => item.completed),
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        data: <?php echo json_encode(array_column($chartData, 'completed')); ?>,
+                        backgroundColor: 'rgba(28, 200, 138, 0.6)',
+                        borderColor: 'rgba(28, 200, 138, 1)',
                         borderWidth: 1
                     }
                 ]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'top',
+                        align: 'end',
+                        labels: {
+                            boxWidth: 12,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
                     },
-                    title: {
-                        display: true,
-                        text: 'จำนวนคำขอรายเดือน'
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        titleColor: '#fff',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleFont: { weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 10,
+                        cornerRadius: 4
                     }
                 },
                 scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            precision: 0
+                            precision: 0,
+                            stepSize: 1
+                        },
+                        grid: {
+                            borderDash: [2],
+                            color: 'rgba(0, 0, 0, 0.05)'
                         }
                     }
                 }
             }
         });
         
-        // Type Chart
+        // Type Chart - Modern Donut Design
+        const typeData = <?php echo json_encode($typeStats); ?>;
+        const typeNames = typeData.map(item => item.type_name);
+        const typeCounts = typeData.map(item => item.count);
+        
+        // Generate a nice color palette
+        const typeColors = [
+            'rgba(78, 115, 223, 0.8)',
+            'rgba(28, 200, 138, 0.8)',
+            'rgba(246, 194, 62, 0.8)',
+            'rgba(231, 74, 59, 0.8)',
+            'rgba(54, 185, 204, 0.8)',
+            'rgba(133, 135, 150, 0.8)'
+        ];
+        
+        const typeBorderColors = typeColors.map(color => color.replace('0.8', '1'));
+        
         const typeCtx = document.getElementById('typeChart').getContext('2d');
         const typeChart = new Chart(typeCtx, {
             type: 'doughnut',
             data: {
-                labels: typeData.map(item => item.type_name),
+                labels: typeNames,
                 datasets: [{
-                    data: typeData.map(item => item.count),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
+                    data: typeCounts,
+                    backgroundColor: typeColors,
+                    borderColor: typeBorderColors,
+                    borderWidth: 1,
+                    hoverOffset: 5
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
                 plugins: {
                     legend: {
                         position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
                     },
-                    title: {
-                        display: true,
-                        text: 'จำนวนคำขอตามประเภท'
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        titleColor: '#fff',
+                        titleFont: { weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 10,
+                        cornerRadius: 4,
+                        callbacks: {
+                            label: function(context) {
+                                let value = context.raw;
+                                let sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                                let percentage = Math.round((value / sum) * 100);
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
                     }
                 }
             }
+        });
+        
+        // Download Chart Functionality
+        document.getElementById('downloadChart').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const canvas = document.getElementById('requestsChart');
+            const image = canvas.toDataURL('image/png', 1.0);
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = image;
+            downloadLink.download = 'สถิติคำขอรายเดือน_<?php echo date('Y-m-d'); ?>.png';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
         });
     });
 </script>

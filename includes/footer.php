@@ -5,6 +5,9 @@
             <span class="text-muted">ระบบจัดการ IT Request &copy; <?php echo date('Y'); ?></span>
         </div>
     </footer>
+    <script>
+    const BASE_URL = "<?php echo BASE_URL; ?>";
+</script>
 
     <!-- jQuery (จำเป็นสำหรับ Bootstrap) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

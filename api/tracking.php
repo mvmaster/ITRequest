@@ -83,6 +83,8 @@ if ($result->num_rows > 0) {
     
     if ($attachmentsResult->num_rows > 0) {
         while ($attachment = $attachmentsResult->fetch_assoc()) {
+            $attachment['file_size_formatted'] = number_format($attachment['file_size'] / 1024, 2) . ' KB';
+            $attachment['uploaded_at_formatted'] = formatDateThai($attachment['uploaded_at']);
             $attachments[] = $attachment;
         }
     }

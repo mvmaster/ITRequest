@@ -251,7 +251,7 @@ function getFileIcon($extension) {
                                         <?php echo htmlspecialchars($attachment['file_name']); ?>
                                         <span class="text-muted ms-2">(<?php echo $attachment['file_size_formatted']; ?>)</span>
                                     </div>
-                                    <a href="../uploads/<?php echo $attachment['file_path']; ?>" class="btn btn-sm btn-outline-primary" download="<?php echo htmlspecialchars($attachment['file_name']); ?>">
+                                    <a href="<?php echo BASE_URL; ?>/uploads/<?php echo $attachment['file_path']; ?>" class="btn btn-sm btn-outline-primary" download="<?php echo htmlspecialchars($attachment['file_name']); ?>">
                                         <i class="fas fa-download"></i> ดาวน์โหลด
                                     </a>
                                 </li>
@@ -296,28 +296,28 @@ function getFileIcon($extension) {
                 <div class="card-body">
                     <div class="d-grid gap-2">
                         <?php if ($request['status'] === 'pending') : ?>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal">
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assignModal">
                                 <i class="fas fa-user-check"></i> มอบหมายงาน
                             </button>
                         <?php endif; ?>
                         
                         <?php if ($request['status'] !== 'completed' && $request['status'] !== 'closed' && $request['status'] !== 'rejected') : ?>
-                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#statusModal">
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#statusModal">
                                 <i class="fas fa-edit"></i> อัพเดตสถานะ
                             </button>
                         <?php endif; ?>
                         
-                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#commentModal">
+                        <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#commentModal">
                             <i class="fas fa-comment"></i> เพิ่มความคิดเห็น
                         </button>
                         
                         <?php if (isAdmin()) : ?>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                                 <i class="fas fa-trash"></i> ลบคำขอ
                             </button>
                         <?php endif; ?>
                         
-                        <a href="manage-requests.php" class="btn btn-secondary">
+                        <a href="manage-requests.php" class="btn btn-sm btn-secondary">
                             <i class="fas fa-arrow-left"></i> กลับไปยังรายการคำขอ
                         </a>
                     </div>
@@ -379,7 +379,7 @@ function getFileIcon($extension) {
                 <h5 class="modal-title" id="assignModalLabel">มอบหมายงาน</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="assignForm" action="../api/requests.php?action=assign" method="post">
+            <form id="assignForm" action="<?php echo BASE_URL; ?>/api/requests.php?action=assign" method="post">
                 <div class="modal-body">
                     <input type="hidden" name="request_id" value="<?php echo $requestId; ?>">
                     
@@ -425,7 +425,7 @@ function getFileIcon($extension) {
                 <h5 class="modal-title" id="statusModalLabel">อัพเดตสถานะคำขอ</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="statusForm" action="../api/requests.php?action=status" method="post">
+            <form id="statusForm" action="<?php echo BASE_URL; ?>/api/requests.php?action=status" method="post">
                 <div class="modal-body">
                     <input type="hidden" name="request_id" value="<?php echo $requestId; ?>">
                     
@@ -440,7 +440,7 @@ function getFileIcon($extension) {
                     </div>
                     
                     <div class="mb-3">
-                        <label for="status" class="form-label">สถานะใหม่:</label>
+                        <label for="status_new" class="form-label">สถานะใหม่:</label>
                         <select name="status" id="status_new" class="form-select" required>
                             <option value="">-- เลือกสถานะ --</option>
                             <?php if ($request['status'] === 'pending' || $request['status'] === 'in_progress') : ?>
@@ -486,7 +486,7 @@ function getFileIcon($extension) {
                 <h5 class="modal-title" id="commentModalLabel">เพิ่มความคิดเห็น</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="commentForm" action="../api/requests.php?action=status" method="post">
+            <form id="commentForm" action="<?php echo BASE_URL; ?>/api/requests.php?action=status" method="post">
                 <div class="modal-body">
                     <input type="hidden" name="request_id" value="<?php echo $requestId; ?>">
                     <input type="hidden" name="status" value="<?php echo $request['status']; ?>">
@@ -527,7 +527,7 @@ function getFileIcon($extension) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                <a href="../api/requests.php?action=delete&id=<?php echo $requestId; ?>" class="btn btn-danger">
+                <a href="<?php echo BASE_URL; ?>/api/requests.php?action=delete&id=<?php echo $requestId; ?>" class="btn btn-danger">
                     <i class="fas fa-trash"></i> ลบคำขอ
                 </a>
             </div>
