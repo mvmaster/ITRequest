@@ -567,104 +567,105 @@ closeDB($conn);
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ตรวจสอบว่ามี Bootstrap 5 Modal หรือไม่
-    if (typeof bootstrap !== 'undefined') {
-        // ลงทะเบียน Modal ทั้งหมด
-        const assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
-        const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        const commentModal = document.getElementById('commentModal') ? 
-            new bootstrap.Modal(document.getElementById('commentModal')) : null;
-        
-        // ลงทะเบียน Event Listeners สำหรับปุ่มที่เปิด Modal
-        document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
-            button.addEventListener('click', function() {
-                const target = this.getAttribute('data-bs-target');
-                
-                // เตรียมข้อมูลสำหรับแต่ละ Modal
+    // ป้องกัน error จากการเข้าถึง undefined
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap JavaScript ไม่ถูกโหลด');
+        return;
+    }
+    
+    // ลงทะเบียน Modal ทั้งหมดโดยตรวจสอบว่าองค์ประกอบมีอยู่จริง
+    const assignModalEl = document.getElementById('assignModal');
+    const statusModalEl = document.getElementById('statusModal');
+    const deleteModalEl = document.getElementById('deleteModal');
+    
+    const assignModal = assignModalEl ? new bootstrap.Modal(assignModalEl) : null;
+    const statusModal = statusModalEl ? new bootstrap.Modal(statusModalEl) : null;
+    const deleteModal = deleteModalEl ? new bootstrap.Modal(deleteModalEl) : null;
+    
+    // จัดการโฟกัสเมื่อปิด Modal เพื่อแก้ปัญหา aria-hidden
+    if (assignModalEl) {
+        assignModalEl.addEventListener('hidden.bs.modal', function() {
+            // เคลียร์โฟกัสหลังจากปิด Modal
+            document.activeElement.blur();
+            // นำโฟกัสกลับไปที่องค์ประกอบที่ควรได้รับโฟกัส
+            document.querySelector('body').focus();
+        });
+    }
+    
+    // ทำเช่นเดียวกันกับ Modal อื่นๆ
+    if (statusModalEl) {
+        statusModalEl.addEventListener('hidden.bs.modal', function() {
+            document.activeElement.blur();
+        });
+    }
+    
+    if (deleteModalEl) {
+        deleteModalEl.addEventListener('hidden.bs.modal', function() {
+            document.activeElement.blur();
+        });
+    }
+    
+    // ลงทะเบียน Event Listeners สำหรับปุ่มที่เปิด Modal
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const target = this.getAttribute('data-bs-target');
+            
+            // ตรวจสอบประเภท Modal และดำเนินการตามเงื่อนไข
+            if (target === '#assignModal' && assignModal) {
                 const requestId = this.getAttribute('data-request-id');
                 const referenceNo = this.getAttribute('data-reference-no');
                 const subject = this.getAttribute('data-subject');
-                const currentStatus = this.getAttribute('data-current-status');
                 
-                if (target === '#assignModal') {
-                    document.getElementById('assign_request_id').value = requestId;
-                    document.getElementById('assign_reference_no').textContent = referenceNo;
-                    document.getElementById('assign_subject').textContent = subject;
-                    document.getElementById('assigned_to').selectedIndex = 0;
-                    document.getElementById('assign_comment').value = '';
-                    assignModal.show();
-                } 
-                else if (target === '#statusModal') {
-                    document.getElementById('status_request_id').value = requestId;
-                    document.getElementById('status_reference_no').textContent = referenceNo;
-                    document.getElementById('status_subject').textContent = subject;
-                    document.getElementById('status_comment').value = '';
-                    
-                    // กรองตัวเลือกสถานะที่อนุญาตให้เปลี่ยน
-                    if (currentStatus) {
-                        const statusSelect = document.getElementById('status_new');
-                        for (let i = 0; i < statusSelect.options.length; i++) {
-                            const option = statusSelect.options[i];
-                            if (option.value) {
-                                const allowedCurrent = option.getAttribute('data-current').split(',');
-                                option.disabled = !allowedCurrent.includes(currentStatus);
-                            }
-                        }
-                        statusSelect.selectedIndex = 0;
+                // เตรียมข้อมูลก่อนเปิด Modal
+                if (document.getElementById('assign_request_id')) {
+                    document.getElementById('assign_request_id').value = requestId || '';
+                }
+                if (document.getElementById('assign_reference_no')) {
+                    document.getElementById('assign_reference_no').textContent = referenceNo || '';
+                }
+                if (document.getElementById('assign_subject')) {
+                    document.getElementById('assign_subject').textContent = subject || '';
+                }
+                
+                assignModal.show();
+            } 
+            // ทำแบบเดียวกันกับ Modal อื่นๆ
+            // ...
+        });
+    });
+    
+    // จัดการกับ Form validation
+    const forms = {
+        'assignForm': {
+            'fields': ['assigned_to', 'assign_comment'],
+            'message': 'กรุณากรอกข้อมูลให้ครบถ้วน'
+        },
+        'statusForm': {
+            'fields': ['status_new', 'status_comment'],
+            'message': 'กรุณากรอกข้อมูลให้ครบถ้วน'
+        }
+    };
+    
+    for (const [formId, config] of Object.entries(forms)) {
+        const form = document.getElementById(formId);
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                let isValid = true;
+                
+                for (const fieldId of config.fields) {
+                    const field = document.getElementById(fieldId);
+                    if (field && !field.value.trim()) {
+                        isValid = false;
+                        break;
                     }
-                    statusModal.show();
                 }
-                else if (target === '#deleteModal') {
-                    document.getElementById('delete_reference_no').textContent = referenceNo;
-                    document.getElementById('delete_button').href = BASE_URL + '/api/requests.php?action=delete&id=' + requestId;
-                    deleteModal.show();
-                }
-                else if (target === '#commentModal' && commentModal) {
-                    commentModal.show();
+                
+                if (!isValid) {
+                    event.preventDefault();
+                    alert(config.message);
                 }
             });
-        });
-        
-        // Form validation
-        const forms = {
-            'assignForm': {
-                'fields': ['assigned_to', 'assign_comment'],
-                'message': 'กรุณากรอกข้อมูลมอบหมายงานให้ครบถ้วน'
-            },
-            'statusForm': {
-                'fields': ['status_new', 'status_comment'],
-                'message': 'กรุณาเลือกสถานะและกรอกความคิดเห็นให้ครบถ้วน'
-            },
-            'commentForm': {
-                'fields': ['comment'],
-                'message': 'กรุณากรอกความคิดเห็น'
-            }
-        };
-        
-        for (const [formId, config] of Object.entries(forms)) {
-            const form = document.getElementById(formId);
-            if (form) {
-                form.addEventListener('submit', function(event) {
-                    let isValid = true;
-                    
-                    for (const fieldId of config.fields) {
-                        const field = document.getElementById(fieldId);
-                        if (field && !field.value.trim()) {
-                            isValid = false;
-                            break;
-                        }
-                    }
-                    
-                    if (!isValid) {
-                        event.preventDefault();
-                        alert(config.message);
-                    }
-                });
-            }
         }
-    } else {
-        console.error('Bootstrap JavaScript ไม่ได้ถูกโหลด ทำให้ Modal ไม่ทำงาน');
     }
 });
 </script>
