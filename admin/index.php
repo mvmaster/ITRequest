@@ -135,7 +135,7 @@ closeDB($conn);
     <!-- Welcome Section with Greeting and Summary -->
     <div class="row mb-4">
         <div class="col-md-12">
-            <div class="card bg-gradient-primary text-white shadow-sm">
+            <div class="card bg-gradient-primary text-black shadow-sm">
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-8">
