@@ -1,4 +1,8 @@
 <?php
+// Enable error reporting for debugging (remove in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 /**
  * Requests API
  * 
@@ -19,20 +23,42 @@ if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST', 'PUT', 'DELETE'])) {
 // Define API endpoint based on request method and parameters
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
-// Handle different request methods
+// ตรวจสอบ HTTP Method และดำเนินการตาม action
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
-        handleGetRequests($action);
+        if ($action === 'all' || $action === 'user' || $action === 'detail' || $action === 'types') {
+            handleGetRequests($action);
+        } elseif ($action === 'delete') {
+            // บางครั้ง delete อาจถูกส่งมาเป็น GET
+            handleDeleteRequest();
+        } else {
+            sendJsonResponse(
+                apiResponse('error', 'Invalid action for GET method', ['action' => $action]),
+                400 // Bad Request
+            );
+        }
         break;
+        
     case 'POST':
-        handlePostRequests($action);
+        if ($action === 'create') {
+            createRequest();
+        } elseif ($action === 'status') {
+            updateRequestStatus();
+        } elseif ($action === 'assign') {
+            assignRequest();
+        } else {
+            sendJsonResponse(
+                apiResponse('error', 'Invalid action for POST method', ['action' => $action]),
+                400 // Bad Request
+            );
+        }
         break;
-    case 'PUT':
-        handlePutRequests($action);
-        break;
-    case 'DELETE':
-        handleDeleteRequests($action);
-        break;
+        
+    default:
+        sendJsonResponse(
+            apiResponse('error', 'Unsupported HTTP method', ['method' => $_SERVER['REQUEST_METHOD']]),
+            405 // Method Not Allowed
+        );
 }
 
 /**
@@ -65,7 +91,7 @@ function handleGetRequests($action) {
             break;
         case 'types':
             // Get request types
-            getRequestTypes();
+            getApiRequestTypes();
             break;
         default:
             sendJsonResponse(
@@ -118,34 +144,6 @@ function handlePutRequests($action) {
         case 'update':
             // Update request
             updateRequest();
-            break;
-        default:
-            sendJsonResponse(
-                apiResponse('error', 'Invalid action'),
-                400 // Bad Request
-            );
-    }
-}
-
-/**
- * Handle DELETE requests
- */
-function handleDeleteRequests($action) {
-    // Check authentication
-    apiCheckAdminAuth(); // Only admin/IT staff can delete requests
-    
-    // Handle different DELETE actions
-    switch ($action) {
-        case 'delete':
-            // Delete request
-            if (isset($_GET['id'])) {
-                deleteRequest($_GET['id']);
-            } else {
-                sendJsonResponse(
-                    apiResponse('error', 'Request ID is required'),
-                    400 // Bad Request
-                );
-            }
             break;
         default:
             sendJsonResponse(
@@ -393,7 +391,8 @@ function getRequestDetails($requestId) {
 /**
  * Get all request types
  */
-function getRequestTypes() {
+function getApiRequestTypes() {
+    // คงโค้ดเดิมไว้แต่เปลี่ยนชื่อฟังก์ชัน
     $conn = connectDB();
     $sql = "SELECT * FROM request_types WHERE status = 1 ORDER BY type_name";
     $result = $conn->query($sql);
@@ -563,29 +562,39 @@ function createRequest() {
  * Update request status
  */
 function updateRequestStatus() {
-    // Get JSON input
-    $data = json_decode(file_get_contents('php://input'), true);
+    // เพิ่ม error reporting เพื่อดูข้อผิดพลาด (เอาออกเมื่อใช้งานจริง)
+    //error_reporting(E_ALL);
+    //ini_set('display_errors', 1);
     
-    // If data is not in JSON format, try to get from POST
-    if (!$data) {
-        $data = $_POST;
-    }
+    // Get data from POST
+    $requestId = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
+    $status = isset($_POST['status']) ? trim($_POST['status']) : '';
+    $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
     
-    // Validate required fields
-    if (empty($data['request_id']) || empty($data['comment'])) {
+    // Validate input
+    if ($requestId <= 0) {
         sendJsonResponse(
-            apiResponse('error', 'Missing required fields'),
+            apiResponse('error', 'Invalid request ID', ['request_id' => $requestId]),
             400 // Bad Request
         );
         return;
     }
     
+    if (empty($comment)) {
+        sendJsonResponse(
+            apiResponse('error', 'Comment is required'),
+            400 // Bad Request
+        );
+        return;
+    }
+    
+    // Connect to database
     $conn = connectDB();
     
-    // Sanitize input
-    $requestId = (int)$data['request_id'];
-    $status = isset($data['status']) ? sanitizeInput($data['status'], $conn) : '';
-    $comment = sanitizeInput($data['comment'], $conn);
+    // Clean input to prevent SQL injection
+    $requestId = (int)$requestId; // Cast to integer for safety
+    $status = $conn->real_escape_string($status);
+    $comment = $conn->real_escape_string($comment);
     $userId = getCurrentUserId();
     
     // Check if request exists
@@ -595,7 +604,7 @@ function updateRequestStatus() {
                 WHERE r.request_id = $requestId";
     $checkResult = $conn->query($checkSql);
     
-    if ($checkResult->num_rows > 0) {
+    if ($checkResult && $checkResult->num_rows > 0) {
         $request = $checkResult->fetch_assoc();
         $currentStatus = $request['current_status'];
         
@@ -608,24 +617,31 @@ function updateRequestStatus() {
         $completedAt = ($status === 'completed' && $currentStatus !== 'completed') ? 
             "completed_at = CURRENT_TIMESTAMP," : "";
         
-        $sql = "UPDATE requests SET status = '$status', $completedAt updated_at = CURRENT_TIMESTAMP 
-                WHERE request_id = $requestId";
+        $updateSql = "UPDATE requests SET status = '$status', $completedAt updated_at = CURRENT_TIMESTAMP 
+                      WHERE request_id = $requestId";
         
-        if ($conn->query($sql)) {
+        if ($conn->query($updateSql)) {
             // Add log entry
-            addRequestLog($requestId, $status, $comment, $userId);
+            $logSql = "INSERT INTO request_logs (request_id, status, comment, performed_by) 
+                      VALUES ($requestId, '$status', '$comment', $userId)";
+            $conn->query($logSql);
             
             // Create notification for requester if status has changed
             if ($status !== $currentStatus) {
                 $statusThai = getStatusThai($status);
                 $notificationMsg = "คำขอ #{$request['reference_no']} ได้เปลี่ยนสถานะเป็น \"{$statusThai}\"";
-                createNotification($request['requester_id'], $requestId, $notificationMsg);
+                
+                $notifSql = "INSERT INTO notifications (user_id, request_id, message) 
+                            VALUES ({$request['requester_id']}, $requestId, '$notificationMsg')";
+                $conn->query($notifSql);
             }
             
             closeDB($conn);
             
-            // Redirect back to request details page after successful update
-            if (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'request-details.php') !== false) {
+            // ตรวจสอบว่ามีการส่งมาจากหน้าเว็บและต้องการ redirect กลับ
+            if (!empty($_SERVER['HTTP_REFERER']) && 
+                (strpos($_SERVER['HTTP_REFERER'], 'request-details.php') !== false || 
+                 strpos($_SERVER['HTTP_REFERER'], 'manage-requests.php') !== false)) {
                 header("Location: " . $_SERVER['HTTP_REFERER']);
                 exit;
             }
@@ -640,14 +656,14 @@ function updateRequestStatus() {
         } else {
             closeDB($conn);
             sendJsonResponse(
-                apiResponse('error', 'Failed to update request status: ' . $conn->error),
+                apiResponse('error', 'Database error: ' . $conn->error),
                 500 // Internal Server Error
             );
         }
     } else {
         closeDB($conn);
         sendJsonResponse(
-            apiResponse('error', 'Request not found'),
+            apiResponse('error', 'Request not found', ['request_id' => $requestId]),
             404 // Not Found
         );
     }
@@ -657,29 +673,31 @@ function updateRequestStatus() {
  * Assign request to IT staff
  */
 function assignRequest() {
-    // Get JSON input
-    $data = json_decode(file_get_contents('php://input'), true);
+    // Get data from POST
+    $requestId = isset($_POST['request_id']) ? (int)$_POST['request_id'] : 0;
+    $assignedTo = isset($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : 0;
+    $comment = isset($_POST['comment']) ? trim($_POST['comment']) : '';
     
-    // If data is not in JSON format, try to get from POST
-    if (!$data) {
-        $data = $_POST;
-    }
-    
-    // Validate required fields
-    if (empty($data['request_id']) || empty($data['assigned_to']) || empty($data['comment'])) {
+    // Validate input
+    if ($requestId <= 0 || $assignedTo <= 0 || empty($comment)) {
         sendJsonResponse(
-            apiResponse('error', 'Missing required fields'),
+            apiResponse('error', 'Missing or invalid input', [
+                'request_id' => $requestId,
+                'assigned_to' => $assignedTo,
+                'has_comment' => !empty($comment)
+            ]),
             400 // Bad Request
         );
         return;
     }
     
+    // Connect to database
     $conn = connectDB();
     
-    // Sanitize input
-    $requestId = (int)$data['request_id'];
-    $assignedTo = (int)$data['assigned_to'];
-    $comment = sanitizeInput($data['comment'], $conn);
+    // Clean input to prevent SQL injection
+    $requestId = (int)$requestId;
+    $assignedTo = (int)$assignedTo;
+    $comment = $conn->real_escape_string($comment);
     $userId = getCurrentUserId();
     
     // Check if request exists
@@ -688,7 +706,7 @@ function assignRequest() {
                  WHERE r.request_id = $requestId";
     $checkResult = $conn->query($checkSql);
     
-    if ($checkResult->num_rows > 0) {
+    if ($checkResult && $checkResult->num_rows > 0) {
         $request = $checkResult->fetch_assoc();
         
         // Get assignee name
@@ -696,28 +714,34 @@ function assignRequest() {
         $assigneeResult = $conn->query($assigneeSql);
         $assigneeName = '';
         
-        if ($assigneeResult->num_rows > 0) {
+        if ($assigneeResult && $assigneeResult->num_rows > 0) {
             $assignee = $assigneeResult->fetch_assoc();
             $assigneeName = $assignee['first_name'] . ' ' . $assignee['last_name'];
         }
         
         // Update request assigned_to and set to in_progress
-        $sql = "UPDATE requests SET assigned_to = $assignedTo, status = 'in_progress', updated_at = CURRENT_TIMESTAMP 
-                WHERE request_id = $requestId";
+        $updateSql = "UPDATE requests SET assigned_to = $assignedTo, status = 'in_progress', updated_at = CURRENT_TIMESTAMP 
+                     WHERE request_id = $requestId";
         
-        if ($conn->query($sql)) {
+        if ($conn->query($updateSql)) {
             // Add log entry
             $logComment = $comment . " (มอบหมายให้: $assigneeName)";
-            addRequestLog($requestId, 'in_progress', $logComment, $userId);
+            $logSql = "INSERT INTO request_logs (request_id, status, comment, performed_by) 
+                      VALUES ($requestId, 'in_progress', '$logComment', $userId)";
+            $conn->query($logSql);
             
             // Create notification for requester
             $notificationMsg = "คำขอ #{$request['reference_no']} ได้รับมอบหมายให้ $assigneeName ดำเนินการ";
-            createNotification($request['requester_id'], $requestId, $notificationMsg);
+            $notifSql = "INSERT INTO notifications (user_id, request_id, message) 
+                        VALUES ({$request['requester_id']}, $requestId, '$notificationMsg')";
+            $conn->query($notifSql);
             
             closeDB($conn);
             
-            // Redirect back to request details page after successful assignment
-            if (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'request-details.php') !== false) {
+            // ตรวจสอบว่ามีการส่งมาจากหน้าเว็บและต้องการ redirect กลับ
+            if (!empty($_SERVER['HTTP_REFERER']) && 
+                (strpos($_SERVER['HTTP_REFERER'], 'request-details.php') !== false || 
+                 strpos($_SERVER['HTTP_REFERER'], 'manage-requests.php') !== false)) {
                 header("Location: " . $_SERVER['HTTP_REFERER']);
                 exit;
             }
@@ -732,14 +756,14 @@ function assignRequest() {
         } else {
             closeDB($conn);
             sendJsonResponse(
-                apiResponse('error', 'Failed to assign request: ' . $conn->error),
+                apiResponse('error', 'Database error: ' . $conn->error),
                 500 // Internal Server Error
             );
         }
     } else {
         closeDB($conn);
         sendJsonResponse(
-            apiResponse('error', 'Request not found'),
+            apiResponse('error', 'Request not found', ['request_id' => $requestId]),
             404 // Not Found
         );
     }
@@ -841,51 +865,76 @@ function updateRequest() {
     }
 }
 
+
 /**
- * Delete request
+ * Handle DELETE requests
  */
-function deleteRequest($requestId) {
-    // Only admin can delete requests
+
+function handleDeleteRequest() {
+    // Check if admin
     if (!isAdmin()) {
         sendJsonResponse(
-            apiResponse('error', 'You do not have permission to delete requests'),
+            apiResponse('error', 'Permission denied: Only administrators can delete requests'),
             403 // Forbidden
         );
         return;
     }
     
+    // Get request ID
+    $requestId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    
+    if ($requestId <= 0) {
+        sendJsonResponse(
+            apiResponse('error', 'Invalid request ID', ['request_id' => $requestId]),
+            400 // Bad Request
+        );
+        return;
+    }
+    
     $conn = connectDB();
-    $requestId = (int)$requestId;
     
     // Check if request exists
     $checkSql = "SELECT reference_no FROM requests WHERE request_id = $requestId";
     $checkResult = $conn->query($checkSql);
     
-    if ($checkResult->num_rows > 0) {
+    if ($checkResult && $checkResult->num_rows > 0) {
         $request = $checkResult->fetch_assoc();
         
-        // Get attachments
+        // Get attachments to delete files
         $attachmentsSql = "SELECT file_path FROM attachments WHERE request_id = $requestId";
         $attachmentsResult = $conn->query($attachmentsSql);
         
-        if ($attachmentsResult->num_rows > 0) {
+        if ($attachmentsResult && $attachmentsResult->num_rows > 0) {
             while ($attachment = $attachmentsResult->fetch_assoc()) {
                 // Delete file from server
                 $filePath = '../uploads/' . $attachment['file_path'];
                 if (file_exists($filePath)) {
-                    unlink($filePath);
+                    @unlink($filePath);
                 }
             }
         }
         
-        // Delete request and related data (cascading delete for attachments and logs)
-        $sql = "DELETE FROM requests WHERE request_id = $requestId";
+        // Disable foreign key checks temporarily to avoid constraint issues
+        $conn->query("SET FOREIGN_KEY_CHECKS=0");
         
-        if ($conn->query($sql)) {
-            closeDB($conn);
-            
-            // Redirect back to admin page after successful deletion
-            if (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'admin') !== false) {
+        // Delete related records first
+        $conn->query("DELETE FROM attachments WHERE request_id = $requestId");
+        $conn->query("DELETE FROM request_logs WHERE request_id = $requestId");
+        $conn->query("DELETE FROM notifications WHERE request_id = $requestId");
+        
+        // Delete request
+        $deleteSql = "DELETE FROM requests WHERE request_id = $requestId";
+        $result = $conn->query($deleteSql);
+        
+        // Re-enable foreign key checks
+        $conn->query("SET FOREIGN_KEY_CHECKS=1");
+        
+        closeDB($conn);
+        
+        if ($result) {
+            // ตรวจสอบว่ามีการส่งมาจากหน้าเว็บและต้องการ redirect กลับ
+            if (!empty($_SERVER['HTTP_REFERER']) && 
+                (strpos($_SERVER['HTTP_REFERER'], 'admin') !== false)) {
                 header("Location: " . $_SERVER['HTTP_REFERER']);
                 exit;
             }
@@ -897,16 +946,15 @@ function deleteRequest($requestId) {
                 ])
             );
         } else {
-            closeDB($conn);
             sendJsonResponse(
-                apiResponse('error', 'Failed to delete request: ' . $conn->error),
+                apiResponse('error', 'Database error: ' . $conn->error),
                 500 // Internal Server Error
             );
         }
     } else {
         closeDB($conn);
         sendJsonResponse(
-            apiResponse('error', 'Request not found'),
+            apiResponse('error', 'Request not found', ['request_id' => $requestId]),
             404 // Not Found
         );
     }

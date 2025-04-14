@@ -5,18 +5,18 @@
  * ไฟล์นี้ใช้สำหรับจัดการ Session ของผู้ใช้งาน
  */
 
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Configure session parameters
+// Configure session parameters - ต้องกำหนดก่อนเริ่ม session
 ini_set('session.cookie_httponly', 1); // Prevent JavaScript access to session cookie
 ini_set('session.use_only_cookies', 1); // Forces sessions to only use cookies
 ini_set('session.cookie_secure', 0); // Set to 1 for HTTPS only
 
 // Set session timeout (30 minutes)
 ini_set('session.gc_maxlifetime', 1800);
+
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if session has expired (after 30 minutes of inactivity)
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {

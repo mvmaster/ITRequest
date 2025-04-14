@@ -6,7 +6,7 @@
  */
 
 // Base URL of the application
-define('BASE_URL', 'http://192.168.0.4/request');
+define('BASE_URL', 'http://192.168.0.4/request'); //  URL ของคุณ
 
 // Application version
 define('APP_VERSION', '1.0.0');

@@ -62,6 +62,11 @@ body {
     color: red;
 }
 
+/* Fix for custom file input in Bootstrap 5 */
+.form-control.form-control-file {
+    padding: 0.375rem 0.75rem;
+}
+
 /* Login Form */
 .login-container {
     max-width: 400px;
@@ -119,6 +124,7 @@ body {
     left: 30px;
     width: 2px;
     background-color: #e9ecef;
+    margin-left: 0;
 }
 
 .timeline > li {
@@ -146,7 +152,6 @@ body {
     border-radius: 50%;
     text-align: center;
     line-height: 30px;
-    background-color: #007bff;
     color: #fff;
 }
 
@@ -185,7 +190,7 @@ body {
     background-color: #ffc107;
 }
 
-.timeline-badge.in-progress {
+.timeline-badge.in_progress {
     background-color: #17a2b8;
 }
 
@@ -201,7 +206,7 @@ body {
     background-color: #6c757d;
 }
 
-/* File Upload */
+/* Fix for file upload */
 .custom-file-input:lang(th) ~ .custom-file-label::after {
     content: "เลือกไฟล์";
 }
@@ -227,7 +232,7 @@ body {
     font-size: 1.2rem;
 }
 
-/* แก้ไขปัญหา Modal */
+/* Bootstrap 5 modal fixes */
 .modal {
     background: rgba(0, 0, 0, 0.5);
 }
@@ -246,6 +251,92 @@ body {
     padding-right: 17px;
 }
 
+/* Fix for modal button close focus */
+.btn-close:focus {
+    box-shadow: none;
+}
+
+/* Notification badge styles */
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -50%);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1;
+    border-radius: 0.5rem;
+    color: #fff;
+    background-color: #dc3545;
+}
+
+/* Notifications dropdown styling */
+.notifications-dropdown {
+    width: 350px;
+    padding: 0;
+}
+
+.notifications-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-content {
+    white-space: normal;
+}
+
+.notification-time {
+    color: #6c757d;
+}
+
+.notifications-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.empty-notifications {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.empty-notifications i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Avatar styling */
+.avatar {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.2rem;
+}
+
+/* Fix for Bootstrap 5 dropdown */
+.dropdown-toggle::after {
+    vertical-align: 0.175em;
+}
+
+/* Fix for input groups in Bootstrap 5 */
+.input-group .btn {
+    z-index: 0;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 767.98px) {
     .timeline > li {
@@ -254,6 +345,93 @@ body {
     .timeline > li > .timeline-badge {
         left: -40px;
     }
+    
+    /* Responsive adjustments for nav items */
+    .navbar-nav .dropdown-menu {
+        position: absolute;
+    }
+}
+
+/* Bootstrap 5 utility classes replacements */
+.me-2 {
+    margin-right: 0.5rem !important;
+}
+
+.ms-2 {
+    margin-left: 0.5rem !important;
+}
+
+.me-3 {
+    margin-right: 1rem !important;
+}
+
+.ms-3 {
+    margin-left: 1rem !important;
+}
+
+/* Dropdown menu end fix */
+.dropdown-menu-end {
+    right: 0;
+    left: auto;
+}
+
+/* Nav items spacing fix */
+.navbar-nav .nav-link {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+/* Status badges */
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+.bg-primary {
+    background-color: #0d6efd !important;
+}
+
+/* Fix for dropdown text color */
+.dropdown-menu {
+    background-color: #fff;
+}
+.dropdown-menu .dropdown-item {
+    color: #212529; /* สีดำหรือเทาเข้ม */
+}
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    background-color: #f8f9fa;
+    color: #16181b;
+}
+.dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item:active {
+    color: #fff;
+    background-color: #0d6efd;
+}
+
+/* เพิ่ม class สำหรับการเปิด dropdown */
+.dropdown-menu.show {
+    display: block;
+}
+
+/* Fix for dropdown position */
+.dropdown {
+    position: relative;
 }
 
 /* Font Import - Sarabun (Thai font) */

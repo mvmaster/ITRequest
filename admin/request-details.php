@@ -537,6 +537,12 @@ function getFileIcon($extension) {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize modals
+        var assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
+        var statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+        var commentModal = new bootstrap.Modal(document.getElementById('commentModal'));
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        
         // Form validation for assign form
         const assignForm = document.getElementById('assignForm');
         if (assignForm) {
